@@ -2,13 +2,14 @@ import http.client
 import json
 import os
 import pandas as pd
+from api import twitter_api
 
 # Function to fetch data from the API
 def fetch_twitter_data(query, count, batch_num):
     conn = http.client.HTTPSConnection("twitter135.p.rapidapi.com")
 
     headers = {
-        'x-rapidapi-key': "Your api key", # input your api key
+        'x-rapidapi-key': twitter_api,
         'x-rapidapi-host': "twitter135.p.rapidapi.com"
     }
 
