@@ -5,3 +5,5 @@ torchvision==0.20.1+cu118
 pandas==2.1.3
 nltk==3.9.1
 google-cloud-language==2.15.1
+python-dotenv==1.0.1
+accelerate>=0.26.0

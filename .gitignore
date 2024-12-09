@@ -1,3 +1,4 @@
 **/api.py
 **/twitter_batches
 ./tmp/
+.env
