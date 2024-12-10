@@ -8,9 +8,9 @@ from .sentiment_models import (
 )
 
 all_models = [
-    DistilbertBaseUncasedEmotion,
-    NltkSentiment,
-    BertBaseUncasedEmotion,
+    DistilbertBaseUncasedEmotion, # Entaon
+    NltkSentiment, # Yashar
+    BertBaseUncasedEmotion, # Dylan
     # GoogleCloudNLP,
     Llama3,
 ]
