@@ -176,8 +176,8 @@ class GoogleCloudNLP(modelInerface):
 class NltkSentiment(modelInerface):
     def __init__(self):
         # nltk.download('vader_lexicon')
-        self.model = SentimentIntensityAnalyzer()
         try:
+            self.model = SentimentIntensityAnalyzer()
             self.model.polarity_scores("This is a random text")
         except LookupError:
             self.load()
