@@ -14,3 +14,7 @@ TODO: label the data
 
 TODO: implement fasttext and a link that can be found at the end of the `models/sentiment_models.py` file
 
+TODO: fix the 'add feedback' 
+
+TODO: make the `show_data_<social_media>.html` file public for every social media. pass the `social_media` as an argument to the html file. and change the `show_data._twitter.html` file to `page_not_available.html` file. and call it when the `data.data_downloader` is raising `NotImplementedError` exception.
+

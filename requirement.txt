@@ -7,3 +7,4 @@ nltk==3.9.1
 google-cloud-language==2.15.1
 python-dotenv==1.0.1
 accelerate>=0.26.0
+praw==7.8.1

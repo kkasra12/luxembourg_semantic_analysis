@@ -8,11 +8,11 @@ from .sentiment_models import (
 )
 
 all_models = [
-    DistilbertBaseUncasedEmotion, # Entaon
-    NltkSentiment, # Yashar
-    BertBaseUncasedEmotion, # Dylan
+    DistilbertBaseUncasedEmotion,  # Entaon
+    NltkSentiment,  # Yashar
+    BertBaseUncasedEmotion,  # Dylan
     # GoogleCloudNLP,
-    Llama3,
+    # Llama3,
 ]
 
 assert all(model.__bases__[0] == modelInerface for model in all_models), (

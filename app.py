@@ -1,14 +1,15 @@
 import re
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 import pandas as pd
 
 from models import all_models
+from data import check_downloaded_data, data_downloader
 
 load_dotenv()
 
-
+# TODO: use better name for this
 all_models_ = [model() for model in all_models]
 
 app = Flask(__name__)
@@ -64,6 +65,10 @@ def calculate_overall(
     }
 
 
+def select_best_label(predictions: list[dict[str, float | str]]) -> str:
+    return max(predictions, key=lambda x: x["score"])["label"]
+
+
 @app.route("/hello/")
 @app.route("/hello/<name>")
 def hello(name=None):
@@ -99,6 +104,59 @@ def analyze():
         data=predicts,
         all_models=[p["name"] for p in predicts],
         all_labels=[p["label"] for p in predicts[0]["results"]],
+    )
+
+
+@app.route("/show_data/<social_media>")
+def show_data(social_media):
+    df = check_downloaded_data(social_media)
+    if df is None:
+        return render_template(
+            f"show_data_{social_media}.html",
+            is_data_available=False,
+        )
+    return render_template(
+        f"show_data_{social_media}.html",
+        table=df.to_html(),
+        data_size=len(df),
+        is_data_available=True,
+        columns=df.columns,
+        social_media_name=social_media,
+        model_names=[
+            humanize_model_name(model.__class__.__name__) for model in all_models_
+        ],
+    )
+
+
+@app.route("/download_<social_media>", methods=["POST"])
+def download_data(social_media):
+    func = data_downloader(social_media)
+    func(**request.form)
+    return redirect(url_for("show_data", social_media=social_media))
+
+
+@app.route("/label_data/<social_media>", methods=["POST"])
+def label_data(social_media):
+    df = check_downloaded_data(social_media)
+    assert df is not None, f"No data for {social_media}"
+    df = df[request.form["col_name"]].dropna().to_frame()
+    model = all_models_[int(request.form["model_index"])]
+    model_name = humanize_model_name(model.__class__.__name__)
+    predictions = []
+    for (row,) in df.itertuples(index=False):
+        out = model.predict(row)
+        if out:
+            predictions.append(select_best_label(out))
+        else:
+            predictions.append("N/A")
+    df["predicted label"] = predictions
+    return render_template(
+        "label_data.html",
+        table=df.to_html(),
+        data_size=len(df),
+        columns=df.columns,
+        social_media_name=social_media,
+        model_name=model_name,
     )
 
 

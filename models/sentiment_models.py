@@ -81,10 +81,18 @@ class DistilbertBaseUncasedEmotion(modelInerface):
     def __init__(self, device=None):
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.pipeline = self.load(device=device)
+
+        self.pipeline, self.tokenizer = self.load(device=device)
 
     def predict(self, text, *, threshold=None, label_mapper=None):
-        out = self.pipeline(text)
+        inputs = self.tokenizer(
+            text, max_length=512, truncation=True, return_tensors="pt"
+        )
+        truncated_text = self.tokenizer.decode(
+            inputs["input_ids"][0], skip_special_tokens=True
+        )
+
+        out = self.pipeline(truncated_text)
         if len(out) > 1:
             warnings.warn(
                 "The model is returning more than one output, the first one will be used.\n the input is {}".format(
@@ -105,12 +113,16 @@ class DistilbertBaseUncasedEmotion(modelInerface):
         pass
 
     def load(self, device=None):
-        return pipeline(
+        pipe = pipeline(
             "text-classification",
             model="bhadresh-savani/distilbert-base-uncased-emotion",
             top_k=None,
             device=device,
         )
+        tokenizer = AutoTokenizer.from_pretrained(
+            "bhadresh-savani/distilbert-base-uncased-emotion"
+        )
+        return pipe, tokenizer
 
     def fit(self, x_train, y_train, *, x_test=None, y_test=None):
         pass
@@ -135,7 +147,9 @@ class BertBaseUncasedEmotion(modelInerface):
         return tokenizer, model
 
     def predict(self, text, *, threshold=None, label_mapper=None):
-        inputs = self.tokenizer(text, return_tensors="pt")
+        inputs = self.tokenizer(
+            text, return_tensors="pt", max_length=512, truncation=True
+        )
         outputs = self.model(**inputs)
         scores = (
             torch.nn.functional.softmax(outputs.logits, dim=1)

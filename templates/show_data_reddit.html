@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Data Collection</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        th {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center">Reddit Data Collection</h1>
+        <div class="row">
+
+            <div class="col-2">
+                <div class="alert alert-info text-center">
+                    {% if is_data_available %}
+                    <p>Data downloaded: {{ data_size }} entries</p>
+                    {% else %}
+                    <p>No data downloaded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-3"></div>
+            <div class="col-2">
+                <form action="/label_data/{{ social_media_name }}" method="post" class="mt-4">
+                    <label for="col_name">Which column to label?</label>
+                    <select name="col_name" id="col_name" class="form-control" required>
+                        <option value="" disabled selected>Select a column</option>
+                        {% for col in columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="model_index" class="mt-2">Which model to use?</label>
+                    <select name="model_index" id="model_index" class="form-control" required>
+                        <option value="" disabled selected>Select a model</option>
+                        {% for model in model_names %}
+                        <option value="{{ loop.index0 }}">{{ model }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <button type="submit" class="btn btn-primary mt-2" {% if not is_data_available %}disabled{% endif
+                        %}>Label Data</button>
+                </form>
+            </div>
+
+            <div class="col-3"></div>
+
+            <div class="col-2">
+                <form action="/download_reddit" method="post" class="mt-4">
+                    <div class="form-group">
+                        <label for="limit">Number of Entries to Download:</label>
+                        <input type="number" class="form-control" id="limit" name="limit" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Download Data</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row table w-100 mt-20">
+            {{ table | safe }}
+        </div>
+
+        <button onclick="topFunction()" id="goUpBtn" title="Go to top" class="btn btn-secondary">Go Up</button>
+
+        <script>
+            // Get the button
+            var goUpBtn = document.getElementById("goUpBtn");
+
+            // When the user scrolls down 20px from the top of the document, show the button
+            window.onscroll = function () { scrollFunction() };
+
+            function scrollFunction() {
+                if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                    goUpBtn.style.display = "block";
+                } else {
+                    goUpBtn.style.display = "none";
+                }
+            }
+
+            // When the user clicks on the button, scroll to the top of the document
+            function topFunction() {
+                document.body.scrollTop = 0;
+                document.documentElement.scrollTop = 0;
+            }
+        </script>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
