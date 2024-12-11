@@ -2,3 +2,4 @@
 **/twitter_batches
 ./tmp/
 .env
+models/__pycache__/
