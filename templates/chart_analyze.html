@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Emotion Analysis Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+
+    <div class="container">
+        <h1 class="my-4 text-center">Emotion Analysis Results</h1>
+
+        <div class="row">
+            {% for model in data %}
+            <div class="col-md-4 mb-4 d-flex justify-content-center">
+                <div>
+                    <h5 class="text-center">{{ model.name }}</h5>
+                    <canvas id="chart-{{ loop.index }}" width="200" height="200"></canvas>
+                </div>
+            </div>
+            {% if loop.index % 3 == 0 %}
+        </div>
+        <div class="row">
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if (data | length) %3 != 0 %}
+    </div>
+    {% endif %}
+    <div class="container">
+        <!-- Feedback Section -->
+        <h1 class="my-4 text-center">Feedback</h1>
+
+        <form action="/feedback" method="post">
+            <div class="form-group">
+                <!-- Email Input -->
+                <label for="name">Email</label>
+                <input type="text" class="form-control" id="name" name="name"
+                    placeholder="Enter your email for further communication">
+                <small> we will send you the result of your feedback as well as some small gifts if your feedback is
+                    helpful</small><br>
+
+                <!-- Radio Buttons for Correct Class -->
+                <label for="feedback" class="mt-3"><strong>Correct Emotion</strong></label><br>
+                {% for label in all_labels %}
+                <input type="radio" id="label_{{ loop.index }}" name="correct_class" value="{{ label }}">
+                <label for="label_{{ loop.index }}">{{ label }}</label><br>
+                {% endfor %}
+
+                <!-- Dropdown Menu for Selected Model -->
+                <label for="selected_model" class="mt-3"><strong>Select the Model Used</strong></label>
+                <select id="selected_model" name="selected_model" class="form-control">
+                    {% for model in all_models %}
+                    <option value="{{ model }}">{{ model }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Text Area for Additional Feedback -->
+                <label for="extra_info" class="mt-3"><strong>Additional Feedback</strong></label>
+                <textarea id="extra_info" name="extra_info" class="form-control" rows="4"
+                    placeholder="Write any additional comments here..."></textarea>
+            </div>
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+        </form>
+    </div>
+
+
+    {% for model in data %}
+    <!-- <h2>{{ model.name }}</h2> -->
+    <!-- <canvas id="chart-{{ loop.index }}" width="200px" height="200px"></canvas> -->
+    <script>
+        const ctx{{ loop.index }} = document.getElementById('chart-{{ loop.index }}').getContext('2d');
+        new Chart(ctx{{ loop.index }}, {
+            type: 'pie',
+            data: {
+                labels: {{ model.results | map(attribute = 'label') | list | safe }},
+            datasets: [{
+                data: {{ model.results | map(attribute = 'score') | list | safe }},
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.4)',
+                'rgba(54, 162, 235, 0.4)',
+                'rgba(255,69,0, 0.4)',
+                'rgba(75, 192, 192, 0.4)',
+                'rgba(153, 102, 255, 0.4)',
+                'rgba(255, 159, 64, 0.4)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+                    }]
+                },
+            options: {
+            responsive: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return `${context.label}: ${(context.raw * 100).toFixed(2)}%`;
+                        }
+                    }
+                }
+            }
+        }
+            });
+    </script>
+    {% endfor %}
+</body>
+
+</html>

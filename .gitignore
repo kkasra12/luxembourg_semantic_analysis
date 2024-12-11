@@ -2,4 +2,4 @@
 **/twitter_batches
 ./tmp/
 .env
-models/__pycache__/
+**/__pycache__/*

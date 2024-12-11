@@ -1,5 +1,6 @@
 import abc
 import json
+import random
 import warnings
 import os
 
@@ -117,7 +118,9 @@ class DistilbertBaseUncasedEmotion(modelInerface):
 
 class BertBaseUncasedEmotion(modelInerface):
     def __init__(self):
-        self.model_location = os.path.join(os.path.dirname(__file__), "bert-base-uncased-emotion")
+        self.model_location = os.path.join(
+            os.path.dirname(__file__), "bert-base-uncased-emotion"
+        )
         tokenizer, model = self.load()
         self.tokenizer = tokenizer
         self.model = model
@@ -164,7 +167,7 @@ class GoogleCloudNLP(modelInerface):
 
         return
         return {"sentiment": sentiment.score}
-    
+
     @property
     def all_labels(self):
         return ["positive", "negative", "neutral"]
@@ -174,7 +177,18 @@ class GoogleCloudNLP(modelInerface):
 
 
 class NltkSentiment(modelInerface):
-    def __init__(self):
+    def __init__(self, weights_mapper: dict[dict[str, float]] = None):
+        if weights_mapper is None:
+            self.weights_mapper = {
+                "sadness": {"neg": 0.5, "neu": 0.3, "pos": 0.1, "compound": 0.1},
+                "joy": {"neg": 0.1, "neu": 0.2, "pos": 0.5, "compound": 0.2},
+                "love": {"neg": 0.1, "neu": 0.1, "pos": 0.5, "compound": 0.3},
+                "anger": {"neg": 0.6, "neu": 0.2, "pos": 0.1, "compound": 0.1},
+                "fear": {"neg": 0.5, "neu": 0.4, "pos": 0.0, "compound": 0.1},
+                "surprise": {"neg": 0.1, "neu": 0.3, "pos": 0.4, "compound": 0.2},
+            }
+        else:
+            self.weights_mapper = weights_mapper
         # nltk.download('vader_lexicon')
         try:
             self.model = SentimentIntensityAnalyzer()
@@ -193,7 +207,7 @@ class NltkSentiment(modelInerface):
         # )
         return [
             {"label": k, "score": v}
-            for k, v in self.model.polarity_scores(text).items()
+            for k, v in self.label_mapper(self.model.polarity_scores(text)).items()
         ]
 
     @property
@@ -202,6 +216,12 @@ class NltkSentiment(modelInerface):
 
     def load(self):
         nltk.download("vader_lexicon")
+
+    def label_mapper(self, labels: dict[str, float]):
+        return {
+            out_k: sum([w[in_k] * v for in_k, v in labels.items()])
+            for out_k, w in self.weights_mapper.items()
+        }
 
 
 class Llama3(modelInerface):
@@ -220,17 +240,26 @@ class Llama3(modelInerface):
             raise NotImplementedError
 
     def predict(self, text, *, threshold=None, label_mapper=None):
-        label = self.pipe(
-            (message:=f"The output shoud be one of {self.all_labels}.\n{text}, Sentiment of the text is:"),
-            max_new_tokens=1,
-            pad_token_id=self.pipe.tokenizer.eos_token_id
-        )[0]['generated_text'].replace(message, "").strip()
+        label = (
+            self.pipe(
+                (
+                    message := f"The output shoud be one of {self.all_labels}.\n{text}, Sentiment of the text is:"
+                ),
+                max_new_tokens=1,
+                pad_token_id=self.pipe.tokenizer.eos_token_id,
+            )[0]["generated_text"]
+            .replace(message, "")
+            .strip()
+        )
+        if label not in self.all_labels:
+            label = random.choice(self.all_labels)
+
         out = [{"label": k, "score": 0 if label != k else 1} for k in self.all_labels]
         return out
 
     @property
     def all_labels(self):
-        return ["positive", "negative", "neutral"]
+        return ["sadness", "joy", "love", "anger", "fear", "surprise"]
 
     def load(self):
         huggingface_login(token=os.environ["HUGGING_FACE_API"])
